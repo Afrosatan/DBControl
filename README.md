@@ -79,7 +79,6 @@ DBRows have metadata about the fields on the results and the result values mappe
 
 Methods on DBRow do runtime type checking and throw InvalidFieldExceptions if the wrong method is called for a field of a different type, or if trying to set the wrong type for a field.
 
-Date and DateTime columns are mapped to Joda-Time LocalDate and LocalDateTime objects.
 ```
 for(DBRow row : rows) {
 	System.out.println(row.getString("name"));
@@ -158,3 +157,10 @@ db.inTransaction(new RunInTransactionClean() {
 	}
 });
 ```
+
+Miscellaneous
+=========
+
+This project uses SLF4J for logging, most of it is traces with SQL being executed and parameters.
+
+Date and DateTime columns are mapped to Joda-Time LocalDate and LocalDateTime objects.
