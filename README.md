@@ -8,9 +8,10 @@ How To Use
 
 To use, include by Maven with a dependency:
 
-&ltdependency&gt
+```xml
+<dependency>
 	<groupId>reiterable</groupId>
 	<artifactId>dbcontrol</artifactId>
 	<version>0.0.1</version>
 </dependency>
-
+```
