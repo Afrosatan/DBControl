@@ -42,4 +42,11 @@
 		</plugins>
 	</build>
 
+
+	<contributors>
+		<contributor>
+			<name>Derek Mulvihill</name>
+			<email>mydumple@gmail.com</email>
+		</contributor>
+	</contributors>
 </project>
