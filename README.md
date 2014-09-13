@@ -1,4 +1,0 @@
-DBControl
-=========
-
-JDBC wrapper library
