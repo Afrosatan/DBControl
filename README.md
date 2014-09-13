@@ -52,7 +52,9 @@ DBControl db = new C3P0DBControl();
 ```
 
 Before you can start using the DBControl, you will have to call the init method with a DBControlConfig object.
+
 Each database has some differences. There are static methods on DBControlConfig with default configuration settings for some databases (postgres, msSql, derby).
+
 You will probably have to set a URL, username and password on the configuration object:
 ```
 DBControlConfig config = DBControlConfig.postgres();
@@ -74,7 +76,9 @@ List<DBRow> rows = db.query("SELECT * FROM customer WHERE customer.Id = ?", 1234
 Most methods take var arg parameters and when provided use a PreparedStatement. Without parameters it falls back to a normal JDBC Statement.  
 
 DBRows have metadata about the fields on the results and the result values mapped by field name. Getting and setting field values is case insensitive.
+
 Methods on DBRow do runtime type checking and throw InvalidFieldExceptions if the wrong method is called for a field of a different type, or if trying to set the wrong type for a field.
+
 Date and DateTime columns are mapped to Joda-Time LocalDate and LocalDateTime objects.
 ```
 for(DBRow row : rows) {
@@ -88,6 +92,7 @@ db.directExecute("DELETE FROM customer WHERE customer.Id = ?", 1234);
 ```
 
 Alternatively, if you have a DBRow object and want to update/insert/delete with a bit more safety and without writing as much SQL, you can use other methods:
+
 Update
 ```
 DBRow row = rows.get(0);
@@ -123,8 +128,7 @@ db.delete("customer", row);
 //DELETE FROM customer WHERE -- each field-value pair on the row matches
 //If more or less than 1 row is deleted, a RowsAffectedSQLException is thrown and the internal transaction rolls back
 ```
-
-Stored Procedures can be called and result sets will be read back in to a SotredProcedureResults object:
+Stored Procedures:
 ```
 StoredProcedureResults results = callStoredProcedure("renameCustomer", 1234, "George Washington");
 System.out.println("Stored Procedure Return Value: " + results.returnValue;
@@ -136,10 +140,15 @@ for(List<DBRow> resultSet : results.resultSets) {
 ```
 
 Transactions are performed by implementing the RunInTransaction interface and calling the inTransaction method.
+
 This also exposes the ConnectionWrapper interface used by DBControl methods which shares most of the same methods with DBControl.
+
 The underlying implementation relies on a single JDBC connection without pooling, and the ConnectionWrapper doesn't stay alive beyond the DBControl calls.
+
 Within the RunInTransaction implementation, the ConnectionWrapper provided will be in a single all or nothing transaction.
+
 RunInTransaction has generics for a return value and additional exception types. You can also extend RunInTransactionClean which returns a null/Void and throws no additional exception types.
+
 Any exceptions thrown from the RunInTransaction methods will roll back the transaction.
 ```
 db.inTransaction(new RunInTransactionClean() {
