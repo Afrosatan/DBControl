@@ -7,6 +7,7 @@ import java.util.concurrent.Future;
 
 import com.dbcontrol.handlers.QueryHandler;
 import com.dbcontrol.handlers.RunInTransaction;
+import com.dbcontrol.results.DBFKData;
 import com.dbcontrol.results.DBMetaData;
 import com.dbcontrol.results.DBRow;
 import com.dbcontrol.results.StoredProcedureResults;
@@ -78,6 +79,11 @@ public interface DBConnection {
 	 * Create a DBMetaData object that represents fields/columns in the named table without retrieving any values/data from the table.
 	 */
 	DBMetaData getTableMetaData(String tableName) throws SQLException;
+
+	/**
+	 * Create a DBFKData object for the foreign keys in the named table.
+	 */
+	DBFKData getForeignKeyData(String tableName) throws SQLException;
 
 	/**
 	 * Run some code with a ConnectionWrapper that is in transaction and will be committed after the method returns without an Exception.

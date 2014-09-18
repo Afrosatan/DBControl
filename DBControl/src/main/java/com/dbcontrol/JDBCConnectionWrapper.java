@@ -27,6 +27,7 @@ import com.dbcontrol.exceptions.RowsAffectedSQLException;
 import com.dbcontrol.handlers.QueryHandler;
 import com.dbcontrol.handlers.RunInTransaction;
 import com.dbcontrol.handlers.RunInTransactionClean;
+import com.dbcontrol.results.DBFKData;
 import com.dbcontrol.results.DBInputStreamWrapper;
 import com.dbcontrol.results.DBMetaData;
 import com.dbcontrol.results.DBRow;
@@ -528,6 +529,14 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
 			if (st != null) {
 				st.close();
 			}
+		}
+	}
+
+	@Override
+	public DBFKData getForeignKeyData(String tableName) throws SQLException {
+		try (ResultSet rs = connection.getMetaData().getImportedKeys(null,
+				null, tableName)) {
+			return new DBFKData(rs);
 		}
 	}
 
