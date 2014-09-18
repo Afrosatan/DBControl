@@ -16,6 +16,7 @@ import com.dbcontrol.exceptions.DBException;
 import com.dbcontrol.handlers.QueryHandler;
 import com.dbcontrol.handlers.RunInTransaction;
 import com.dbcontrol.handlers.WithConnection;
+import com.dbcontrol.results.DBFKData;
 import com.dbcontrol.results.DBMetaData;
 import com.dbcontrol.results.DBRow;
 import com.dbcontrol.results.StoredProcedureResults;
@@ -284,6 +285,19 @@ public class C3P0DBControl implements DBControl {
 		try {
 			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
 			return wrapper.getTableMetaData(tableName);
+		} finally {
+			if (wrapper != null) {
+				wrapper.close();
+			}
+		}
+	}
+
+	@Override
+	public DBFKData getForeignKeyData(String tableName) throws SQLException {
+		ConnectionWrapper wrapper = null;
+		try {
+			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+			return wrapper.getForeignKeyData(tableName);
 		} finally {
 			if (wrapper != null) {
 				wrapper.close();

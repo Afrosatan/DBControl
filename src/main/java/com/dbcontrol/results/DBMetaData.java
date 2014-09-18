@@ -12,14 +12,15 @@ import java.util.Map;
  * @author Derek Mulvihill - Aug 2, 2013
  */
 public class DBMetaData {
-	private Map<String, DBFieldData> fieldData;
+	private final Map<String, DBFieldData> fieldData;
 
 	public DBMetaData(ResultSetMetaData metaData) throws SQLException {
 		Map<String, DBFieldData> fieldData = new HashMap<String, DBFieldData>();
 		for (int i = 1; i <= metaData.getColumnCount(); i++) {
 			DBFieldData field = new DBFieldData();
 			field.number = i;
-			field.name = metaData.getColumnLabel(i).toLowerCase();
+			field.casedName = metaData.getColumnLabel(i);
+			field.name = field.casedName.toLowerCase();
 			field.type = DBFieldType.getTypeFromJDBCType(metaData
 					.getColumnType(i));
 			field.precision = metaData.getPrecision(i);
@@ -42,6 +43,7 @@ public class DBMetaData {
 	public static class DBFieldData {
 		private int number;
 		private String name;
+		private String casedName;
 		private DBFieldType type;
 		private int precision;
 
@@ -60,6 +62,13 @@ public class DBMetaData {
 		 */
 		public String getName() {
 			return name;
+		}
+
+		/**
+		 * The same field name as {@link #getName()} without being converted to lower case.
+		 */
+		public String getCasedName() {
+			return casedName;
 		}
 
 		/**
