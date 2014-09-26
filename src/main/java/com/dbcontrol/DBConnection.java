@@ -65,6 +65,11 @@ public interface DBConnection {
 	int directExecute(String sql, Object... params) throws SQLException;
 
 	/**
+	 * Execute arbitrary sql that can alter database (Eg. create, alter, drop tables).
+	 */
+	void alterExecute(String sql) throws SQLException;
+
+	/**
 	 * Run a stored procedure.
 	 */
 	StoredProcedureResults callStoredProcedure(String storedProc,

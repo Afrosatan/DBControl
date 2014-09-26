@@ -274,6 +274,19 @@ public class C3P0DBControl implements DBControl {
 	}
 
 	@Override
+	public void alterExecute(String sql) throws SQLException {
+		ConnectionWrapper wrapper = null;
+		try {
+			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+			wrapper.alterExecute(sql);
+		} finally {
+			if (wrapper != null) {
+				wrapper.close();
+			}
+		}
+	}
+
+	@Override
 	public void close() throws SQLException {
 		pool.close();
 		pool = null;
