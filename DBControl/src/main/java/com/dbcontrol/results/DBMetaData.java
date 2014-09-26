@@ -147,6 +147,7 @@ public class DBMetaData {
 			case Types.TIMESTAMP:
 				return DATETIME;
 			case Types.BIT:
+			case Types.BOOLEAN:
 				return BOOL;
 			case Types.BINARY:
 				return BINARY;
