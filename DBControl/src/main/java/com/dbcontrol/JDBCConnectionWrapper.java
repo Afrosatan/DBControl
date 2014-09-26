@@ -411,6 +411,14 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
 	}
 
 	@Override
+	public void alterExecute(String sql) throws SQLException {
+		logger.trace("Alter SQL: " + sql);
+		try (Statement statement = connection.createStatement()) {
+			statement.execute(sql);
+		}
+	}
+
+	@Override
 	public StoredProcedureResults callStoredProcedure(String storedProc,
 			Object... params) throws SQLException {
 		StringBuilder sql = new StringBuilder("{ ? = call ");
