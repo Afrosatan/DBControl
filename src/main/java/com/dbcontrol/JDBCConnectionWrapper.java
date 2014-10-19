@@ -168,11 +168,37 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
 		return rs;
 	}
 
+	private void singleUpdate(final QueryBuilder sql) throws SQLException {
+		logger.trace("SQL: " + sql.getSql());
+		logger.trace("Parameters: " + Arrays.toString(sql.getParams()));
+
+		inTransaction(new RunInTransactionClean() {
+			@Override
+			public void runTran(ConnectionWrapper connect) throws SQLException {
+				try (PreparedStatement ps = connection.prepareStatement(sql
+						.getSql())) {
+					List<Object> params = sql.getParamList();
+					for (int i = 1; i <= params.size(); i++) {
+						setPSObject(ps, i, params.get(i - 1));
+					}
+					int n = ps.executeUpdate();
+					if (n == 0) {
+						throw new RowsAffectedSQLException(
+								"No rows affected during update, rolling back");
+					} else if (n > 1) {
+						throw new RowsAffectedSQLException(
+								"Multiple rows affected during update, rolling back");
+					}
+				}
+			}
+		});
+	}
+
 	@Override
 	public void update(String tableName, DBRow row,
 			Map<String, Object> fieldValues) throws SQLException {
-		final List<Object> parameters = new ArrayList<>();
-		final StringBuilder sql = new StringBuilder("UPDATE ");
+		QueryBuilder sql = new QueryBuilder();
+		sql.append("UPDATE ");
 		sql.append(tableName);
 		sql.append(" SET ");
 		boolean first = true;
@@ -193,8 +219,7 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
 				sql.append(", ");
 			}
 			sql.append(entry.getKey());
-			sql.append(" = ? ");
-			parameters.add(DataUtil.getDBObject(entry.getValue()));
+			sql.append(" = ? ", DataUtil.getDBObject(entry.getValue()));
 		}
 		if (first) { // no changes
 			return;
@@ -213,36 +238,52 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
 			Object obj = DataUtil.getDBObject(row.getObject(field.getName()));
 			if (obj != null) {
 				sql.append(field.getName());
-				sql.append(" = ? ");
-				parameters.add(obj);
+				sql.append(" = ? ", obj);
 			} else {
 				sql.append(field.getName());
 				sql.append(" IS NULL ");
 			}
 		}
 
-		logger.trace("SQL: " + sql);
-		logger.trace("Parameters: " + Arrays.toString(parameters.toArray()));
+		singleUpdate(sql);
+	}
 
-		inTransaction(new RunInTransactionClean() {
-			@Override
-			public void runTran(ConnectionWrapper connect) throws SQLException {
-				try (PreparedStatement ps = connection.prepareStatement(sql
-						.toString())) {
-					for (int i = 1; i <= parameters.size(); i++) {
-						setPSObject(ps, i, parameters.get(i - 1));
-					}
-					int n = ps.executeUpdate();
-					if (n == 0) {
-						throw new RowsAffectedSQLException(
-								"No rows affected during update, rolling back");
-					} else if (n > 1) {
-						throw new RowsAffectedSQLException(
-								"Multiple rows affected during update, rolling back");
-					}
-				}
+	@Override
+	public void update(String tableName, Map<String, Object> setValues,
+			Map<String, Object> whereValues) throws SQLException {
+		QueryBuilder sql = new QueryBuilder();
+		sql.append("UPDATE ");
+		sql.append(tableName);
+		sql.append(" SET ");
+		boolean first = true;
+		for (Entry<String, Object> entry : setValues.entrySet()) {
+			if (first) {
+				first = false;
+			} else {
+				sql.append(", ");
 			}
-		});
+			sql.append(entry.getKey());
+			sql.append(" = ? ", DataUtil.getDBObject(entry.getValue()));
+		}
+		sql.append(" WHERE ");
+		first = true;
+		for (Entry<String, Object> entry : whereValues.entrySet()) {
+			if (first) {
+				first = false;
+			} else {
+				sql.append(" AND ");
+			}
+			Object obj = DataUtil.getDBObject(entry.getValue());
+			if (obj != null) {
+				sql.append(entry.getKey());
+				sql.append(" = ? ", obj);
+			} else {
+				sql.append(entry.getKey());
+				sql.append(" IS NULL ");
+			}
+		}
+
+		singleUpdate(sql);
 	}
 
 	@Override

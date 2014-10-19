@@ -19,6 +19,10 @@ public class QueryBuilder {
 		return params.toArray(new Object[params.size()]);
 	}
 
+	public List<Object> getParamList() {
+		return params;
+	}
+
 	public QueryBuilder append(String sql, Object... params) {
 		this.sql.append(sql);
 		for (Object param : params) {

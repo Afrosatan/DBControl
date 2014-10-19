@@ -205,6 +205,20 @@ public class C3P0DBControl implements DBControl {
 	}
 
 	@Override
+	public void update(String tableName, Map<String, Object> setValues,
+			Map<String, Object> whereValues) throws SQLException {
+		ConnectionWrapper wrapper = null;
+		try {
+			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+			wrapper.update(tableName, setValues, whereValues);
+		} finally {
+			if (wrapper != null) {
+				wrapper.close();
+			}
+		}
+	}
+
+	@Override
 	public Object insert(String tableName, String generatedKeyField, DBRow row,
 			Map<String, Object> fieldValues) throws SQLException {
 		ConnectionWrapper wrapper = null;
