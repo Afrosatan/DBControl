@@ -1,5 +1,6 @@
 package com.dbcontrol;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,8 +9,8 @@ import java.util.List;
  * @author Derek Mulvihill - Oct 18, 2014
  */
 public class QueryBuilder {
-	private StringBuilder sql;
-	private List<Object> params;
+	private StringBuilder sql = new StringBuilder();
+	private List<Object> params = new ArrayList<>();
 
 	public String getSql() {
 		return sql.toString();
