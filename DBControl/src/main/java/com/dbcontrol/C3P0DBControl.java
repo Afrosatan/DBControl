@@ -80,55 +80,35 @@ public class C3P0DBControl implements DBControl {
 	@Override
 	public <T, E extends Exception> T inTransaction(RunInTransaction<T, E> trans)
 			throws SQLException, E {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.inTransaction(trans);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public <T, E extends Exception> T withConnection(WithConnection<T, E> with)
 			throws SQLException, E {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return with.with(wrapper);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public List<DBRow> query(String sql, Object... params) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.query(sql, params);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public void queryHandle(String sql, Object[] params, QueryHandler handler)
 			throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			wrapper.queryHandle(sql, params, handler);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
@@ -149,10 +129,8 @@ public class C3P0DBControl implements DBControl {
 			@Override
 			public List<DBRow> get() throws InterruptedException,
 					ExecutionException {
-				ConnectionWrapper wrapper = null;
-				try {
-					wrapper = new JDBCConnectionWrapper(getConnection(),
-							cancelDetector);
+				try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+						getConnection(), cancelDetector)) {
 					cancel = wrapper.queryAsync(sql, params);
 					return cancel.get();
 				} catch (ExecutionException | InterruptedException ex) {
@@ -161,13 +139,6 @@ public class C3P0DBControl implements DBControl {
 					throw new ExecutionException(ex);
 				} finally {
 					done = true;
-					if (wrapper != null) {
-						try {
-							wrapper.close();
-						} catch (SQLException ex) {
-							throw new ExecutionException(ex);
-						}
-					}
 				}
 			}
 
@@ -193,142 +164,92 @@ public class C3P0DBControl implements DBControl {
 	@Override
 	public void update(String tableName, DBRow row,
 			Map<String, Object> fieldValues) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			wrapper.update(tableName, row, fieldValues);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public void update(String tableName, Map<String, Object> setValues,
 			Map<String, Object> whereValues) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			wrapper.update(tableName, setValues, whereValues);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public Object insert(String tableName, String generatedKeyField, DBRow row,
 			Map<String, Object> fieldValues) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.insert(tableName, generatedKeyField, row,
 					fieldValues);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public Object directInsert(String tableName, Map<String, Object> fieldValues)
 			throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.directInsert(tableName, fieldValues);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public StoredProcedureResults callStoredProcedure(String storedProc,
 			Object... params) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.callStoredProcedure(storedProc, params);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public void delete(String tableName, DBRow row) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			wrapper.delete(tableName, row);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public int directExecute(String sql, Object... params) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.directExecute(sql, params);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public void alterExecute(String sql) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			wrapper.alterExecute(sql);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
-	public void close() throws SQLException {
+	public void close() {
 		pool.close();
 		pool = null;
 	}
 
 	@Override
 	public DBMetaData getTableMetaData(String tableName) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.getTableMetaData(tableName);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 
 	@Override
 	public DBFKData getForeignKeyData(String tableName) throws SQLException {
-		ConnectionWrapper wrapper = null;
-		try {
-			wrapper = new JDBCConnectionWrapper(getConnection(), cancelDetector);
+		try (ConnectionWrapper wrapper = new JDBCConnectionWrapper(
+				getConnection(), cancelDetector)) {
 			return wrapper.getForeignKeyData(tableName);
-		} finally {
-			if (wrapper != null) {
-				wrapper.close();
-			}
 		}
 	}
 }
