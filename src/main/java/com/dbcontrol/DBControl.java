@@ -7,12 +7,11 @@ import com.dbcontrol.handlers.WithConnection;
 import java.sql.SQLException;
 
 /**
- * Extension of DBConnection that exposes an interface it initialize the connection amongst other things.<br>
- * Implementations of DBControl can be pooled and each method call can be run against a different underlying database connection.
+ * Interface that for an object that is capable of creating DBConnection instances for interacting with a database.
  *
  * @author Derek Mulvihill - May 4, 2014
  */
-public interface DBControl extends DBConnection {
+public interface DBControl extends AutoCloseable {
     /**
      * Set up the database connection. Before this is called, all other methods on this instance should fail.
      *
@@ -25,4 +24,14 @@ public interface DBControl extends DBConnection {
      * Run some code with a ConnectionWrapper.
      */
     <T, E extends Exception> T withConnection(WithConnection<T, E> with) throws SQLException, E;
+
+    /**
+     * Run some code with a ConnectionWrapper that is in transaction and will be committed after the method returns without an Exception.
+     */
+    <T, E extends Exception> T inTransaction(WithConnection<T, E> trans) throws SQLException, E;
+
+    /**
+     * Close and release any connections.
+     */
+    void close() throws SQLException;
 }

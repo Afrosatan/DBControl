@@ -1,7 +1,7 @@
 package com.dbcontrol;
 
 import com.dbcontrol.handlers.QueryHandler;
-import com.dbcontrol.handlers.RunInTransaction;
+import com.dbcontrol.handlers.WithConnection;
 import com.dbcontrol.results.DBFKData;
 import com.dbcontrol.results.DBMetaData;
 import com.dbcontrol.results.DBRow;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 /**
- * Common super-interface for methods shared between ConnectionWrapper and DBControl.
+ * Interface for a connection to a database that can execute SQL.
  *
  * @author Derek Mulvihill - May 4, 2014
  */
@@ -80,11 +80,6 @@ public interface DBConnection extends AutoCloseable {
     StoredProcedureResults callStoredProcedure(String storedProc, Object... params) throws SQLException;
 
     /**
-     * Close and release any connections.
-     */
-    void close() throws SQLException;
-
-    /**
      * Create a DBMetaData object that represents fields/columns in the named table without retrieving any values/data from the table.
      */
     DBMetaData getTableMetaData(String tableName) throws SQLException;
@@ -97,5 +92,10 @@ public interface DBConnection extends AutoCloseable {
     /**
      * Run some code with a ConnectionWrapper that is in transaction and will be committed after the method returns without an Exception.
      */
-    <T, E extends Exception> T inTransaction(RunInTransaction<T, E> trans) throws SQLException, E;
+    <T, E extends Exception> T inTransaction(WithConnection<T, E> trans) throws SQLException, E;
+
+    /**
+     * Close and release any connections.
+     */
+    void close() throws SQLException;
 }

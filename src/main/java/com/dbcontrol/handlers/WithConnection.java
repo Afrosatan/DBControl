@@ -1,15 +1,14 @@
 package com.dbcontrol.handlers;
 
-import com.dbcontrol.ConnectionWrapper;
-import com.dbcontrol.DBControl;
+import com.dbcontrol.DBConnection;
 
 import java.sql.SQLException;
 
 /**
- * Companion interface to use with {@link DBControl#withConnection}.
+ * Interface to implement to interact with a DBConnection.
  *
  * @author Derek Mulvihill - Oct 28, 2013
  */
 public interface WithConnection<T, E extends Exception> {
-    T with(ConnectionWrapper connect) throws SQLException, E;
+    T with(DBConnection connect) throws SQLException, E;
 }

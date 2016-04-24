@@ -3,8 +3,8 @@ package com.dbcontrol;
 import com.dbcontrol.config.cancel.SQLCancellationDetector;
 import com.dbcontrol.exceptions.RowsAffectedSQLException;
 import com.dbcontrol.handlers.QueryHandler;
-import com.dbcontrol.handlers.RunInTransaction;
-import com.dbcontrol.handlers.RunInTransactionClean;
+import com.dbcontrol.handlers.WithConnection;
+import com.dbcontrol.handlers.WithConnectionClean;
 import com.dbcontrol.results.*;
 import com.dbcontrol.results.DBMetaData.DBFieldData;
 import com.dbcontrol.results.DBMetaData.DBFieldType;
@@ -21,18 +21,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * ConnectionWrapper implemention wrapper around a JDBC Connection.
+ * DBConnection implementation wrapper around a JDBC Connection.
  *
  * @author Derek Mulvihill - May 4, 2014
  */
-public class JDBCConnectionWrapper implements ConnectionWrapper {
-    private static final Logger logger = LoggerFactory.getLogger(JDBCConnectionWrapper.class);
+public class JDBCDBConnection implements DBConnection {
+    private static final Logger logger = LoggerFactory.getLogger(JDBCDBConnection.class);
 
     private final Connection connection;
     private int transactionDepth = 0;
     private final SQLCancellationDetector cancelDetector;
 
-    public JDBCConnectionWrapper(Connection connection, SQLCancellationDetector cancelDetector) {
+    public JDBCDBConnection(Connection connection, SQLCancellationDetector cancelDetector) {
         this.connection = connection;
         this.cancelDetector = cancelDetector;
     }
@@ -147,9 +147,9 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
         logger.trace("SQL: " + sql.getSql());
         logger.trace("Parameters: " + Arrays.toString(sql.getParams()));
 
-        inTransaction(new RunInTransactionClean() {
+        inTransaction(new WithConnectionClean() {
             @Override
-            public void runTran(ConnectionWrapper connect) throws SQLException {
+            public void withConn(DBConnection connect) throws SQLException {
                 try (PreparedStatement ps = connection.prepareStatement(sql.getSql())) {
                     List<Object> params = sql.getParamList();
                     for (int i = 1; i <= params.size(); i++) {
@@ -323,9 +323,9 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
         }
         final KeyStore key = new KeyStore();
 
-        inTransaction(new RunInTransactionClean() {
+        inTransaction(new WithConnectionClean() {
             @Override
-            public void runTran(ConnectionWrapper connect) throws SQLException {
+            public void withConn(DBConnection connect) throws SQLException {
                 try (PreparedStatement ps = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
                     for (int i = 1; i <= parameters.size(); i++) {
                         setPSObject(ps, i, parameters.get(i - 1));
@@ -372,9 +372,9 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
         logger.trace("SQL: " + sql);
         logger.trace("Parameters: " + Arrays.toString(parameters.toArray()));
 
-        inTransaction(new RunInTransactionClean() {
+        inTransaction(new WithConnectionClean() {
             @Override
-            public void runTran(ConnectionWrapper connect) throws SQLException {
+            public void withConn(DBConnection connect) throws SQLException {
                 try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
                     for (int i = 1; i <= parameters.size(); i++) {
                         setPSObject(ps, i, parameters.get(i - 1));
@@ -501,10 +501,10 @@ public class JDBCConnectionWrapper implements ConnectionWrapper {
     }
 
     @Override
-    public <T, E extends Exception> T inTransaction(RunInTransaction<T, E> trans) throws SQLException, E {
+    public <T, E extends Exception> T inTransaction(WithConnection<T, E> trans) throws SQLException, E {
         try {
             startTransaction();
-            T retval = trans.run(this);
+            T retval = trans.with(this);
             commitTransaction();
             return retval;
         } catch (Throwable th) {
