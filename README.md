@@ -6,12 +6,12 @@ A simple JDBC wrapper library.
 How To Start
 =========
 
-Download, install, and include by Maven with a dependency:
+Download/clone the repository, using Maven install to build it locally, and include with Maven in your project:
 ```xml
 <dependency>
-	<groupId>reiterable</groupId>
+	<groupId>com.reiterable</groupId>
 	<artifactId>dbcontrol</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 </dependency>
 ```
 
@@ -69,13 +69,23 @@ Now you're ready to start running sql commands.
 How to Use:
 =========
 
+The DBControl object exposes two methods: withConnection() and inTransaction() which do the same thing, except inTransaction() will rollback any changes if an Exception is thrown.
+
+Both methods take a WithConnection object, which has a single method that you will need to implement to work with a DBConnection object that is capable of executing SQL.
+
+WithConnection has generic type parameters for a return value and additional exception types. You can also extend WithConnectionClean which returns a null/Void and throws no additional exception types.
+
+DBConnection instances rely on a single JDBC connection without pooling, and the DBConnection will only work within WithConnection.with().
+
+The examples below using Java 8 lambda syntax for WithConnections.
+
 The first thing you can do is a simple query, DBControl reads result sets back in DBRow objects for each result returned:
 ```
-List<DBRow> rows = db.query("SELECT * FROM customer WHERE customer.Id = ?", 1234);
+List<DBRow> rows = db.withConnection(connect -> connect.query("SELECT * FROM customer WHERE customer.Id = ?", 1234));
 ```
-Most methods take var arg parameters and when provided use a PreparedStatement. Without parameters it falls back to a normal JDBC Statement.  
+Most methods take var arg parameters and when provided use a PreparedStatement. Without parameters it falls back to a normal Statement.  
 
-DBRows have metadata about the fields on the results and the result values mapped by field name. Getting and setting field values is case insensitive.
+DBRows have metadata about the fields in the results and the result values mapped by field name. Getting and setting field values is case insensitive.
 
 Methods on DBRow do runtime type checking and throw InvalidFieldExceptions if the wrong method is called for a field of a different type, or if trying to set the wrong type for a field.
 
@@ -85,9 +95,9 @@ for(DBRow row : rows) {
 }
 ```
 
-Update/Insert/Delete statements can be executed directly with the DBControl.directExecute method:
+Update/Insert/Delete statements can be executed directly with the DBConnection.directExecute method:
 ```
-db.directExecute("DELETE FROM customer WHERE customer.Id = ?", 1234);
+db.withConnection(connect -> connect.directExecute("DELETE FROM customer WHERE customer.Id = ?", 1234));
 ```
 
 Alternatively, if you have a DBRow object and want to update/insert/delete with a bit more safety and without writing as much SQL, you can use other methods:
@@ -97,7 +107,7 @@ Update
 DBRow row = rows.get(0);
 Map<String, Object> fvs = new HashMap<>();
 fvs.put("name", "George Orwell");
-db.update("customer", row, fvs);
+db.withConnection(connect -> connect.update("customer", row, fvs));
 //UPDATE customer SET name = 'George Orwell' WHERE --each field-value pair on the row matches
 //Uses PrepareStatement parameters for field values and DBRow values
 //If more or less than 1 row is updated, a RowsAffectedSQLException is thrown and the internal transaction rolls back
@@ -108,7 +118,7 @@ Insert
 DBRow row = new DBRow(db.getTableMetaData("customer"));
 Map<String, Object> fvs = new HashMap<>();
 fvs.put("name", "George Costanza");
-db.insert("customer", "Id", row, fvs);
+db.withConnection(connect -> connect.insert("customer", "Id", row, fvs));
 //INSERT INTO customer (name) VALUES ('George Costanza')
 //Uses PreparedStatement parameters for field values
 //Also pulls field values from the DBRow (field values overrides DBRow values)
@@ -118,49 +128,31 @@ db.insert("customer", "Id", row, fvs);
 //Insert without DBRow instance
 Map<String, Object> fvs = new HashMap<>();
 fvs.put("name", "George Costanza");
-db.directInsert("customer", fvs);
+db.withConnection(connect -> connect.directInsert("customer", fvs));
 ```
 Delete
 ```
 DBRow row = rows.get(0);
-db.delete("customer", row);
+db.withConnection(connect -> connect.delete("customer", row));
 //DELETE FROM customer WHERE -- each field-value pair on the row matches
 //If more or less than 1 row is deleted, a RowsAffectedSQLException is thrown and the internal transaction rolls back
 ```
 Stored Procedures:
 ```
-StoredProcedureResults results = callStoredProcedure("renameCustomer", 1234, "George Washington");
-System.out.println("Stored Procedure Return Value: " + results.returnValue;
-for(List<DBRow> resultSet : results.resultSets) {
-	for(DBRow row : resultSet) {
-		System.out.println(row.getString("NameBefore") + " -> " + row.getString("NameAfter"));
-	}
-}
-```
-
-Transactions are performed by implementing the RunInTransaction interface and calling the inTransaction method.
-
-This also exposes the ConnectionWrapper interface used by DBControl methods which shares most of the same methods with DBControl.
-
-The underlying implementation relies on a single JDBC connection without pooling, and the ConnectionWrapper doesn't stay alive beyond the DBControl calls.
-
-Within the RunInTransaction implementation, the ConnectionWrapper provided will be in a single all or nothing transaction.
-
-RunInTransaction has generics for a return value and additional exception types. You can also extend RunInTransactionClean which returns a null/Void and throws no additional exception types.
-
-Any exceptions thrown from the RunInTransaction methods will roll back the transaction.
-```
-db.inTransaction(new RunInTransactionClean() {
-	public void runTran(ConnectionWrapper connect) {
-		connect.directExecute("UPDATE customer SET name = ? WHERE Id = ?", "George Clooney", 1234);
-		connect.directExecute("DELETE FROM customer WHERE Id = ?", 1234);
-	}
+db.withConnection(connect -> {
+    StoredProcedureResults results = connect.callStoredProcedure("renameCustomer", 1234, "George Washington");
+    System.out.println("Stored Procedure Return Value: " + results.returnValue);
+    for(List<DBRow> resultSet : results.resultSets) {
+        for(DBRow row : resultSet) {
+            System.out.println(row.getString("NameBefore") + " -> " + row.getString("NameAfter"));
+        }
+    }
 });
 ```
 
 Miscellaneous
 =========
 
-This project uses SLF4J for logging, most of it is traces with SQL being executed and parameters.
+This project uses SLF4J for logging. It logs traces for SQL being executed and parameters.
 
 Date and DateTime columns are mapped to Joda-Time LocalDate and LocalDateTime objects.
