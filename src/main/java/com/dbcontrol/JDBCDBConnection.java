@@ -45,16 +45,19 @@ public class JDBCDBConnection implements DBConnection {
     }
 
     @Override
-    public void queryHandle(String sql, Object[] params, QueryHandler handler) throws SQLException {
+    public int queryHandle(String sql, Object[] params, QueryHandler handler) throws SQLException {
         Statement statement = null;
         try {
             statement = queryPre(sql, params);
             ResultSet rs = queryExecute(statement, sql);
 
             DBMetaData dbm = new DBMetaData(rs.getMetaData());
+            int count = 0;
             while (rs.next()) {
                 handler.handleRow(new DBRow(dbm, rs));
+                count++;
             }
+            return count;
         } finally {
             if (statement != null) {
                 statement.close();
@@ -143,31 +146,29 @@ public class JDBCDBConnection implements DBConnection {
         return rs;
     }
 
-    private void singleUpdate(final QueryBuilder sql) throws SQLException {
+    private int singleUpdate(final QueryBuilder sql) throws SQLException {
         logger.trace("SQL: " + sql.getSql());
         logger.trace("Parameters: " + Arrays.toString(sql.getParams()));
 
-        inTransaction(new WithConnectionClean() {
-            @Override
-            public void withConn(DBConnection connect) throws SQLException {
-                try (PreparedStatement ps = connection.prepareStatement(sql.getSql())) {
-                    List<Object> params = sql.getParamList();
-                    for (int i = 1; i <= params.size(); i++) {
-                        setPSObject(ps, i, params.get(i - 1));
-                    }
-                    int n = ps.executeUpdate();
-                    if (n == 0) {
-                        throw new RowsAffectedSQLException("No rows affected during update, rolling back");
-                    } else if (n > 1) {
-                        throw new RowsAffectedSQLException("Multiple rows affected during update, rolling back");
-                    }
+        return inTransaction(connect -> {
+            try (PreparedStatement ps = connection.prepareStatement(sql.getSql())) {
+                List<Object> params = sql.getParamList();
+                for (int i = 1; i <= params.size(); i++) {
+                    setPSObject(ps, i, params.get(i - 1));
                 }
+                int n = ps.executeUpdate();
+                if (n == 0) {
+                    throw new RowsAffectedSQLException("No rows affected during update, rolling back");
+                } else if (n > 1) {
+                    throw new RowsAffectedSQLException("Multiple rows affected during update, rolling back");
+                }
+                return n;
             }
         });
     }
 
     @Override
-    public void update(String tableName, DBRow row, Map<String, Object> fieldValues) throws SQLException {
+    public int update(String tableName, DBRow row, Map<String, Object> fieldValues) throws SQLException {
         QueryBuilder sql = new QueryBuilder();
         sql.append("UPDATE ");
         sql.append(tableName);
@@ -193,7 +194,7 @@ public class JDBCDBConnection implements DBConnection {
             sql.append(" = ? ", DataUtil.getDBObject(entry.getValue()));
         }
         if (first) { // no changes
-            return;
+            return 0;
         }
         sql.append(" WHERE ");
         first = true;
@@ -216,11 +217,11 @@ public class JDBCDBConnection implements DBConnection {
             }
         }
 
-        singleUpdate(sql);
+        return singleUpdate(sql);
     }
 
     @Override
-    public void update(String tableName, Map<String, Object> setValues, Map<String, Object> whereValues) throws SQLException {
+    public int update(String tableName, Map<String, Object> setValues, Map<String, Object> whereValues) throws SQLException {
         QueryBuilder sql = new QueryBuilder();
         sql.append("UPDATE ");
         sql.append(tableName);
@@ -253,7 +254,7 @@ public class JDBCDBConnection implements DBConnection {
             }
         }
 
-        singleUpdate(sql);
+        return singleUpdate(sql);
     }
 
     @Override
@@ -345,7 +346,7 @@ public class JDBCDBConnection implements DBConnection {
     }
 
     @Override
-    public void delete(String tableName, DBRow row) throws SQLException {
+    public int delete(String tableName, DBRow row) throws SQLException {
         final List<Object> parameters = new ArrayList<>();
         final StringBuilder sql = new StringBuilder("DELETE FROM ");
         sql.append(tableName);
@@ -372,20 +373,18 @@ public class JDBCDBConnection implements DBConnection {
         logger.trace("SQL: " + sql);
         logger.trace("Parameters: " + Arrays.toString(parameters.toArray()));
 
-        inTransaction(new WithConnectionClean() {
-            @Override
-            public void withConn(DBConnection connect) throws SQLException {
-                try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-                    for (int i = 1; i <= parameters.size(); i++) {
-                        setPSObject(ps, i, parameters.get(i - 1));
-                    }
-                    int n = ps.executeUpdate();
-                    if (n == 0) {
-                        throw new RowsAffectedSQLException("No rows affected during delete.");
-                    } else if (n > 1) {
-                        throw new RowsAffectedSQLException("Multiple rows affected during delete");
-                    }
+        return inTransaction(connect -> {
+            try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+                for (int i = 1; i <= parameters.size(); i++) {
+                    setPSObject(ps, i, parameters.get(i - 1));
                 }
+                int n = ps.executeUpdate();
+                if (n == 0) {
+                    throw new RowsAffectedSQLException("No rows affected during delete.");
+                } else if (n > 1) {
+                    throw new RowsAffectedSQLException("Multiple rows affected during delete");
+                }
+                return n;
             }
         });
     }
