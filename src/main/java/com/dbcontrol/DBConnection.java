@@ -70,9 +70,10 @@ public interface DBConnection extends AutoCloseable {
     int directExecute(String sql, Object... params) throws SQLException;
 
     /**
-     * Execute arbitrary sql that can alter database (Eg. create, alter, drop tables).
+     * Execute arbitrary sql that can alter database (Eg. create, alter, drop tables).<br>
+     * Can also be used for updates that have results (Eg. UPDATE RETURNING clauses), which directExecute fails on.
      */
-    void alterExecute(String sql) throws SQLException;
+    List<DBRow> alterExecute(String sql, Object... params) throws SQLException;
 
     /**
      * Run a stored procedure.

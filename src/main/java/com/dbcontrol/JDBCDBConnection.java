@@ -408,10 +408,30 @@ public class JDBCDBConnection implements DBConnection {
     }
 
     @Override
-    public void alterExecute(String sql) throws SQLException {
+    public List<DBRow> alterExecute(String sql, Object... params) throws SQLException {
         logger.trace("Alter SQL: " + sql);
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
+        logger.trace("Parameters: " + Arrays.toString(params));
+        if (params == null || params.length == 0) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(sql);
+                final ResultSet rs = statement.getResultSet();
+                if (rs != null) {
+                    return DataUtil.getRowsFromResultSet(rs);
+                }
+                return null;
+            }
+        } else {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                for (int i = 1; i <= params.length; i++) {
+                    setPSObject(ps, i, DataUtil.getDBObject(params[i - 1]));
+                }
+                ps.execute();
+                final ResultSet rs = ps.getResultSet();
+                if (rs != null) {
+                    return DataUtil.getRowsFromResultSet(rs);
+                }
+                return null;
+            }
         }
     }
 
