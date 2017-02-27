@@ -5,12 +5,8 @@ import com.dbcontrol.results.DBRow;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
-import org.joda.time.format.ISODateTimeFormat;
 
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +40,7 @@ class DataUtil {
             obj = new Date(ld.toDate().getTime());
         } else if (obj instanceof LocalTime) {
             LocalTime lt = (LocalTime) obj;
-            obj = ISODateTimeFormat.hourMinuteSecond().print(lt);
+            obj = new Time(new LocalDate(1970, 1, 1).toLocalDateTime(lt).toDate().getTime());
         }
         return obj;
     }
