@@ -5,12 +5,10 @@ import com.dbcontrol.results.DBMetaData.DBFieldData;
 import com.dbcontrol.results.DBMetaData.DBFieldType;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 
 import java.math.BigDecimal;
-import java.sql.Clob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +38,13 @@ public class DBRow {
                         values.put(field.getName(), null);
                     } else {
                         values.put(field.getName(), new LocalDateTime(value.getTime()));
+                    }
+                } else if (field.getType() == DBFieldType.TIME) {
+                    Time value = (Time) rs.getObject(field.getColumnNumber());
+                    if (value == null) {
+                        values.put(field.getName(), null);
+                    } else {
+                        values.put(field.getName(), new LocalTime(value.getTime()));
                     }
                 } else if (field.getType() == DBFieldType.CLOB) {
                     Clob value = (Clob) rs.getObject(field.getColumnNumber());
@@ -85,6 +90,8 @@ public class DBRow {
                 return getDate(field);
             case DATETIME:
                 return getDateTime(field);
+            case TIME:
+                return getTime(field);
             case BOOL:
                 return getBool(field);
             case BINARY:
@@ -129,6 +136,9 @@ public class DBRow {
                     break;
                 case DATETIME:
                     correctType = value instanceof LocalDateTime;
+                    break;
+                case TIME:
+                    correctType = value instanceof LocalTime;
                     break;
                 case BOOL:
                     correctType = value instanceof Boolean;
@@ -253,6 +263,19 @@ public class DBRow {
                 return (LocalDateTime) values.get(data.getName());
             default:
                 throw new InvalidFieldException("Field [" + field + "] does not have a LocalDateTime representation");
+        }
+    }
+
+    /**
+     * Returns the LocalTime value for the DATETIME field type.
+     */
+    public LocalTime getTime(String field) {
+        DBFieldData data = getFieldData(field);
+        switch (data.getType()) {
+            case TIME:
+                return (LocalTime) values.get(data.getName());
+            default:
+                throw new InvalidFieldException("Field [" + field + "] does not have a LocalTime representation");
         }
     }
 

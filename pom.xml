@@ -4,7 +4,7 @@
 
     <groupId>com.reiterable</groupId>
     <artifactId>dbcontrol</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <name>DBControl</name>
     <description>JDBC wrapper</description>
 

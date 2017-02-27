@@ -114,6 +114,8 @@ public class DBMetaData {
         DATE,
         //java.sql.Timestamp (modified to jodatime LocalDateTime)
         DATETIME,
+        //java.sql.Time (modified to jodatime LocalTime)
+        TIME,
         //Booleans
         BOOL,
         //byte[]
@@ -148,6 +150,8 @@ public class DBMetaData {
                     return DATE;
                 case Types.TIMESTAMP:
                     return DATETIME;
+                case Types.TIME:
+                    return TIME;
                 case Types.BIT:
                 case Types.BOOLEAN:
                     return BOOL;
